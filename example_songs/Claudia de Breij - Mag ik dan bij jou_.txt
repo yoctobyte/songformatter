@@ -1,0 +1,63 @@
+Claudia de Breij - Mag ik dan bij jou
+font=Times-Roman
+image=images/claudia_de_breij.png 120x150 460x685
+fontsize=12
+chordwidth=100
+
+
+/L
+/B
+ C           Em            Fmaj7         C     G  
+ 
+C                                               Em
+Als de oorlog komt en als ik dan moet schuilen, mag ik dan bij jou?
+       Dm                                          C            G
+Als er een clubje komt waar ik niet bij wil horen, mag ik dan bij jou?
+    C                                               Em
+Als er een regel komt waar ik niet aan voldoen kan, mag ik dan bij jou?
+   Dm                                              C            G
+En als ik iets moet zijn wat ik nooit geweest ben, mag ik dan bij jou?
+ 
+           C       Em               F              Dm
+Mag ik dan bij jou schuilen als het nergens anders kan
+G              Am           F               G
+en als ik moet huilen droog jij mijn tranen dan?
+         C      Em          F              Dm
+Want als ik bij jou mag mag jij altijd bij mij,
+G              Am               F             Gsus4  G
+kom wanneer je wilt, ik hou een kamer voor je vrij.
+ 
+C                                         Em
+Als er onweer komt en als ik dan bang ben,  mag ik dan bij jou?
+Dm                                         C            G
+Als de avond valt en het is mij te donker, mag ik dan bij jou?
+C                                             Em
+Als de lente komt en als ik dan verliefd ben, mag ik dan bij jou?
+Dm                                       C            G
+Als de liefde komt en ik weet het zeker, mag ik dan bij jou?
+ 
+           C       Em               F              Dm
+Mag ik dan bij jou schuilen als het nergens anders kan
+G              Am           F               G
+en als ik moet huilen droog jij mijn tranen dan?
+         C      Em          F              Dm
+Want als ik bij jou mag mag jij altijd bij mij,
+G              Am               F             Gsus4 G
+kom wanneer je wilt, ik hou een kamer voor je vrij.
+ 
+ C             Em            Fmaj7         C     G   
+ 
+           C       Em               F              Dm
+Mag ik dan bij jou schuilen als het nergens anders kan
+G              Am           F               G
+en als ik moet huilen droog jij mijn tranen dan?
+         C      Em          F              Dm
+Want als ik bij jou mag mag jij altijd bij mij,
+G              Am               F             Gsus4  G
+kom wanneer je wilt, ik hou een kamer voor je vrij.
+ 
+C                                          Em
+Als het einde komt en als ik dan bang ben, mag ik dan bij jou?
+Dm                                           C            G      C
+Als het einde komt en als ik dan alleen ben, mag ik dan bij jou?
+

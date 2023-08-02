@@ -1,0 +1,115 @@
+Ramses Shaffy - Laat Me
+BPM: 50
+
+chordwidth=160
+font=Times-Roman
+fontsize=16
+chordfontsize=13
+chordfont=Times-Roman Times-Italic
+image=songs/images_cut/ramses_shaffy.png 180x200 427x630
+C#m B/C# C#m B/C# C#m B/C# C#m  2x
+ 
+ C#m        B/C#          C#m    B/C#   C#m
+Moi qui ai vécu sans scrupules
+            B7/D#         E
+Je devrais mourir sans remords
+ F#m                         C#m
+J'ai fait mon plein de crépuscules
+         D#7               G#
+Je n'devrais pas crier "encore"
+ 
+C#m          B/C#            C#m  B/C#   C#m
+Moi le païen, le pauvre diable
+             B7/D#         E
+Qui pre nait satan pour un bleu
+D#m7b5         G#7sus4 G#7  C#m
+  Je rends mon âme  la tête basse
+           G#              C#m
+La mort me tire par les cheveux
+ 
+ 
+ 
+F#m        F#m
+Vivre..., Vivre
+ B7sus4            B7          E
+Même sans soleil, même sans été
+ F#m        C#m
+Vivre..., Vivre
+D#m7b5    G#7sus4 G#7  C#m
+C'est ma dernière volonté
+ 
+ 
+C#m         B/C#             C#m   B/C#  C#m
+Ik zal mijn vrienden niet vergeten
+            B7/D#            E
+Want wie me lief is blijf me lief
+ F#m                      C#m
+En waar ze wonen moest ik weten
+           D#7              G#
+Maar ik verloor hun laatste brief
+ 
+C#m       B/C#             C#m   B/C#  C#m
+Ik zal ze heus wel weer ontmoeten
+             B7/D#                    E
+Misschien vandaag, misschien over een jaar
+D#m7b5       G#7sus4  G#7    C#m
+   Ik zal ze kussen   en   begroeten
+           G#               C#m
+'t Komt vanzelf weer voor elkaar
+ 
+ 
+F#m      F#m
+Laat me, Laat me (Vivre, Vivre)
+ B7sus4            B7          E
+Laat me mijn eigen gang maar gaan
+-                Même bancal, même à moitié
+ F#m             C#m
+Laat me Vivre..(Vivre) Laat me
+D#m7b5     G#7sus4 G#7  C#m
+Ik heb het altijd  zo gedaan
+ 
+ 
+C#m        B/C#        C#m   B/C#  C#m
+Je vois de la lumière noire
+              B7/D#         E
+C'est ce qu'a dit le père Hugo
+F#m                          C#m
+Moi qui ne pense pas à l'histoire
+              D#7          G#
+Je manque d'esprit d'à-propos
+ 
+/P
+C#m       B/C#              C#m   B/C#  C#m
+Voorlopig blijf ik nog jouw zanger
+             B7/D#              E
+Jouw zwarte schaap, jouw trouwe fan
+D#m7b5         G#7sus4   G#7        C#m
+  Ik blijf nog lang   en liefst nog langer
+           G#             C#m
+En laat me blijven wie ik ben
+ 
+F#m               F#m
+(Vivre),Laat me,(Vivre),Laat me
+ B7sus4            B7          E
+Quand faut y aller, il faut y aller
+                     Laat me mijn eigen gang maar gaan
+ F#m              C#m
+Laat me, Vivre...(Vivre), Laat me
+D#m7b5     G#7sus4 G#7  C#m
+Ik heb het altijd  zo gedaan
+ 
+F#m               F#m
+Laat me, Vivre...(Vivre), Laat me
+ B7sus4            B7          E
+(en plein soleil en plein été)
+-               mijn eigen gang maar gaan
+F#m             C#m
+Vivre, Laat me, (Vivre), Laat me
+ D#m7b5     G#7sus4 G#7  C#m
+C'est ma dernière volonté
+B/C#                   C#m  B/C#
+Ik heb het altijd zo gedaan
+C#m    B/C#  C#m   B/C#  C#m
+   Laat me
+
+

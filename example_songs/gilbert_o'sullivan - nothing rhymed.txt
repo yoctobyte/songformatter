@@ -1,0 +1,73 @@
+Gilbert O'Sullivan - Nothing Rhymed
+image=images/gilbert_o'sullivan.png 350x350 350,450
+
+D#2=xx5343
+fontsize=16
+chordfontsize=13.5
+/B 
+     Dm                          A
+If I give up the seat I've been saving
+        Dm              Bb
+To some elderly lady or man
+      C
+Am I being a good boy
+            C7       F
+Am I your pride and joy
+        Bb             Eb           F
+Mother please if your pleased say I am
+ 
+ 
+        Dm                        A
+And if while in the course of my duty
+      Dm                  Bb
+I perform an unfortunate take
+           C
+Would you punish me so,
+     C7       F
+unbelievably so
+        Bb          Eb           F
+Never again will I make that mistake
+ 
+ 
+     Bbsus4                  F7
+This feeling inside me could never deny me
+                            Bb
+The right to be wrong if I choose
+          Bbm
+And this pleasure I get
+          F
+>From say winning a bet
+       Eb          F
+Is to lose
+ 
+ 
+          Dm                     A
+When I'm drinking my Bonaparte Shandy
+        Dm                    Bb
+Eating more than enough apple pies
+         C                          C7         F
+Will I glance at my screen and see real human beings
+           Bb
+Starve to death
+          Eb         F
+Right in front of my eyes
+ 
+ 
+        Dm                         A7
+Nothing old, nothing new, nothing ventured
+        Dm               Dm7          Bb
+Nothing gained, nothing still-born or lost
+         C                         C7           F
+Nothing further than proof nothing wilder than youth
+        Bb                        C
+Nothing older than time nothing sweeter than wine
+          A          A7         Dm          Dm7
+Nothing physically, recklessly, hopelessly blind
+        Bb
+Nothing I couldn't say
+         Gm         C7
+Nothing why 'cos today
+          F
+Nothing rhymed
+
+

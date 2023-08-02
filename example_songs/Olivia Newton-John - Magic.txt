@@ -1,0 +1,82 @@
+Magic
+Olivia Newton-John
+BPM: ?
+
+image=songs/images_cut/olivia_newton-john.png 200x200 380,625
+D    D7b5    D    D7b5
+
+D    D7b5    D     D7b5
+Come take my hand
+           Dmaj9  D
+You should know me
+     F#m7        Am      Em
+I've always been in your mind
+Am                 Em
+You know I will be kind
+        Asus4 A D
+I'll be guiding you
+
+
+D   D7b5      D     D7b5
+Building your dream
+       Dmaj9  D
+Has to start now
+F#m7             Am      Em
+There's no other road to take
+Am                  Em
+You won't make a mistake
+        Asus4 A  D
+I'll be guiding you
+
+
+D    D7b5  D    D7b5
+
+/U
+[Chorus]
+Dm                         Bb   C/Bb
+You have to believe we are magic
+Bb          C/Bb         Dm
+Nothing can stand in our way
+Dm                         Bb   C/Bb
+You have to believe we are magic
+Bb      C/Bb              Am
+Don't let your aim ever stray
+    D7                    Gm
+And if all your hopes survive
+Bbm           Asus4
+Destiny will arrive
+D                   Em7b5         A
+I'll bring all your dreams alive
+    D
+For you
+D                   Em7b5         A
+I'll bring all your dreams alive
+    D
+For you
+
+D   D7b5      D     D7b5
+From where I stand
+       Dmaj9  D
+You are home free
+     F#m7        Am      Em
+The planets align so rare
+Am                  Em
+There's promise in the air
+        Asus4 A  D
+And I'm guiding you
+
+D   D7b5      D     D7b5
+Through every turn
+       Dmaj9  D
+I'll be near you
+     F#m7        Am      Em
+I'll come any time you call
+Am                  Em
+I'll catch you when you fall
+        Asus4 A  D
+I'll be guiding you
+
+
+[Chorus]
+/U
+

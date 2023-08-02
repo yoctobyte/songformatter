@@ -1,0 +1,91 @@
+Ramses Shaffy - Zing Vecht Huil Bid Lach Werk en Bewonder
+BPM: 58
+
+image=songs/images_cut/ramses_shaffy.png 120x130 470,630
+chordwidth=170
+fontsize=12.0
+/U
+       G                               E
+Voor degene in een schuilhoek achter glas
+       G                          E
+Voor degene met de dichtbeslagen ramen
+       G                       E
+Voor degene die dacht dat-ie alleen was
+        G                        B    C#/B    B    C#/B   B
+Moet nu weten, we zijn allemaal samen
+ 
+       G                          E
+Voor degene met ’t dichtgeslagen boek
+       G                          E
+Voor degene met de snel vergeten namen
+       G                        E
+Voor degene die 't vruchteloze zoeken
+       G                         Bsus4  B
+Moet nu weten, we zijn allemaal samen
+ 
+ E     Abm7   C#m7  E7   Amaj7          B7
+Zing, vecht, huil, bid, lach, werk en bewonder
+ E     Emaj7  E7         A             D7
+Zing, vecht, huil, bid, lach, werk en bewonder
+ E     Abm7   C#m7  E7   Amaj7          B7
+Zing, vecht, huil, bid, lach, werk en bewonder
+ E     Abm7   C#m7  E7   Amaj7          B7
+Zing, vecht, huil, bid, lach, werk en bewonder
+      E
+Niet zonder ons
+ 
+       G                     E
+Voor degene met de slapeloze nacht
+       G                            E
+Voor degene die 't geluk niet kan beamen
+       G                                    E
+Voor degene die niets doet, die alleen maar wacht
+        G                       Bsus4  B
+Moet nu weten, we zijn allemaal samen
+ 
+      G                      E
+Voor degene met z'n mateloze trots
+       G               E
+In z'n risicoloze hoge toren
+       G               E
+Op z'n risicoloze hoge rots
+        G                      Bsus4  B
+Moet nu weten, zo zijn we niet geboren
+ 
+ E     Abm7   C#m7  E7   Amaj7          B7
+Zing, vecht, huil, bid, lach, werk en bewonder
+ E     Emaj7  E7         A             D7
+Zing, vecht, huil, bid, lach, werk en bewonder
+ E     Abm7   C#m7  E7   Amaj7          B7
+Zing, vecht, huil, bid, lach, werk en bewonder
+ E     Abm7   C#m7  E7   Amaj7          B7
+Zing, vecht, huil, bid, lach, werk en bewonder
+      E
+Niet zonder ons
+ 
+       G                   E
+Voor degene met 't open gezicht
+       G                      E
+Voor degene met 't naakte lichaam
+       G                   E
+Voor degene in 't witte licht
+       G                         Bsus4 B
+Voor degene die weet, we komen samen
+ 
+ E     Abm7   C#m7  E7   Amaj7          B7
+Zing, vecht, huil, bid, lach, werk en bewonder
+ E     Emaj7  E7         A             D7
+Zing, vecht, huil, bid, lach, werk en bewonder
+ E     Abm7   C#m7  E7   Amaj7          B7
+Zing, vecht, huil, bid, lach, werk en bewonder
+ E     Abm7   C#m7  E7   Amaj7          B7
+Zing, vecht, huil, bid, lach, werk en bewonder
+ 
+      E        D       C#m      C      Bsus4    A#-5
+Niet zonder ons, Niet zonder ons, Niet zonder ons,
+      A       G#m+5    G6       F#m7   Fmaj7     E
+Niet zonder ons, Niet zonder ons, Niet zonder ons
+/U
+
+
+
