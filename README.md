@@ -23,6 +23,10 @@ The tool's default settings provide a customizable layout. You can add images. C
 * Supports multiple standard fonts and their variations.
 * Filters double blank lines automatically.
 
+## Screenshots:
+![Screenshot 1](screenshots/screenshot1.png)
+![Screenshot 2](screenshots/screenshot2.png)
+
 ## Typical Usage
 Copy'n'paste your chosen song from your favorite song+chords site or archive, or just write your own song or transcription. The de-facto format is: Title, blanc line, chord line, text line, chord line, text line etc. (and has been like that since pre-internet era.). Make adjustments. See preview of the converted text in real-time. Export as PDF when satisfied. Print the pdf.
 
