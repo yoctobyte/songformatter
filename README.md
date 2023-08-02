@@ -49,9 +49,9 @@ To run from source (any platform):
 The standard file format includes the artist's name, the song title, BPM, and key at the top, followed by lines of chords and lyrics. Double blank lines will be filtered out.
 ```Artist Name - Song Title
 BPM: xxx
-Key: x```
+Key: x
   
-```[chords line]
+[chords line]
 [song lyrics]
 [chords line]
 [song lyrics]```
