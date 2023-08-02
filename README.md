@@ -23,8 +23,7 @@ The tool's default settings provide a customizable layout. You can add images. C
 * Supports multiple standard fonts and their variations.
 * Filters double blank lines automatically.
 
-## Screenshots:
-![Screenshot 1](screenshots/screenshot1.png)
+## Screenshot:
 ![Screenshot 2](screenshots/screenshot2.png)
 
 ## Typical Usage
