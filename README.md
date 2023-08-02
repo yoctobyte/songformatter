@@ -38,32 +38,32 @@ To run from source (any platform):
 * Extract the source files to a directory of choice
 * Install a recent version of Python (3.10+)
 * Open a command line and use pip to install some additional libraries:
-`pip install markdown tkhtmlview reportlab PIL`
+```pip install markdown tkhtmlview reportlab PIL```
 * start the application:
-`python SongFormatter.py`
+```python SongFormatter.py```
 * The application will keep a settings file in the same directory.
 
 
 ## File Format:
 
 The standard file format includes the artist's name, the song title, BPM, and key at the top, followed by lines of chords and lyrics. Double blank lines will be filtered out.
-`Artist Name - Song Title
+```Artist Name - Song Title
 BPM: xxx
-Key: x`
+Key: x```
   
-`[chords line]
+```[chords line]
 [song lyrics]
 [chords line]
-[song lyrics]`
+[song lyrics]```
 
 ## Formatting Options:
 
 Song Formatter uses several special commands: 
-`'/P' forces a page break. 
+```'/P' forces a page break. 
 '/B' adds an extra blank line. 
 '/U' moves the cursor up one line. 
 '/L' inserts a horizontal line. 
-'/FL' inserts a full-width horizontal line.`
+'/FL' inserts a full-width horizontal line.```
 This command should be the only text on a line. If any other text is on the line, it will be rendered normal.
 
 ## Settings:
@@ -71,43 +71,43 @@ This command should be the only text on a line. If any other text is on the line
 The settings section lets you set default values for things like font and size. 
 The units are in 'Point', where a point is 1/72 inch. US Letter size is 8.5 x 11 inches (612 x 792 points), and A4 size is 8.27 x 11.69 inches (595 x 842 points).
 You can override these settings in-line with an assignment. You can assign (almost) any setting variable. Examples:
-`font=Times-Roman
+```font=Times-Roman
 fontsize=12 
 marginleft=150
 chordswidth=175
 pagetop=800
 transpose=3 
-capo=IV`
+capo=IV```
 
 ## Adding Images:
 
 You can add images with the image setting. The tool supports multiple images and will print them in the order you define. If you don't want images to overlap text, define them in the right order. Images should be in a format supported by reportlab. The 'image' command has two parameters. The first one defines the image dimensions, and the second one sets its position on the sheet. If you don't specify a position, the image will be displayed at the current position.
 The 'image' command syntax is:
-`image=path/to/imagefile.png 100x100 500,700`
+```image=path/to/imagefile.png 100x100 500,700```
 
 The first parameter after 'image=' defines the image dimensions, and the second one sets its position on the sheet. 
 
 ## Tuning
 You can specify any tuning with a minimum of 4 strings. The standard tuning is 'EADGBE'. Example:
-`tuning=CFBbEbGC`
+```tuning=CFBbEbGC```
 
 ## Capo
 You can specify to use a capotasto. Guitar chords will be rendered taking the Capo in account on the specified fret.
-`capo=II`
+```capo=II```
 If you want to indicate the use of a capo at the top of the page, include it in the header section.
 
 ## transpose
 You can transpose all chords to another key, by defining the amount of semitones to transpose with.
-`transpose=-2`
+```transpose=-2```
 
 ## Overriding finger positions
 Frets are automatically calculated based on the chord played. Sometimes this is not optimal. You can specify a chord override as follow:
-`Dm=x00231`
+```Dm=x00231```
 You should use the same notation for the chord as was used in the song. So, if you wrote CM7 you should use that instead of 'Cmaj7'. Only valid chords can be overriden*. You can only use numbers and an 'x'. The amount of characters should match the tuning.
 
 ## Supported fonts
 Please note that font names are case-sensitive, and that you have to specify the full font name e.g. 'Times-Roman' and not 'Times' or 'Italic'.
-`Courier
+```Courier
 Courier-Bold
 Courier-BoldOblique
 Courier-Oblique
@@ -120,7 +120,7 @@ Times-Bold
 Times-BoldItalic
 Times-Italic
 Symbol
-ZapfDingbats`
+ZapfDingbats```
 
 
 ## Issues
