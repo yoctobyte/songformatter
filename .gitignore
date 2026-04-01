@@ -1,0 +1,11 @@
+.venv/
+__pycache__/
+*.py[cod]
+.songformatter_workspace/
+
+.pytest_cache/
+.mypy_cache/
+
+songformatter_settings.ini
+lastopened.txt
+tmppdf.pdf
