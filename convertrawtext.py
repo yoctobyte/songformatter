@@ -17,6 +17,7 @@ import os
 import re
 import html
 from settings import get,set, getF, getI
+from key_analysis import analyze_key
 import ast
 from collections import Counter
 from reportlab.pdfgen import canvas
@@ -30,6 +31,7 @@ from tkinter import filedialog, messagebox
 import atexit
 import tempfile
 from time import time
+from pathlib import Path
 
 background_image = None
 
@@ -61,6 +63,42 @@ def seems_like_a_chord(chord):
     # The subsequent characters can be 1,2,3,4,5,6,7,9, /, +, -, b, #, M, m, a, j, s, u, o, d, i or blank.
     pattern = r'^[A-Ga-g][b#]?[1-7,9/#bMmajsuo\+di-]*$'
     return bool(re.match(pattern, chord))
+
+
+def parse_song_metadata(song_text):
+    lines = song_text.splitlines()
+    headers = []
+
+    while lines:
+        line = lines.pop(0)
+        if line == "":
+            break
+        if "=" in line:
+            continue
+        headers.append(line)
+
+    if headers and headers[0] != "":
+        parts = [part.strip() for part in headers.pop(0).split("-", 1) if part.strip()]
+        headers[:0] = parts[::-1]
+
+    song_title = headers.pop(0).strip() if headers and headers[0].strip() else ""
+    artist = headers.pop(0).strip() if headers and headers[0].strip() else ""
+    return artist, song_title
+
+
+def sanitize_filename_part(value):
+    sanitized = re.sub(r'[<>:"/\\|?*\x00-\x1f]', "", value.strip())
+    sanitized = re.sub(r"\s+", " ", sanitized)
+    sanitized = sanitized.strip(" .")
+    return sanitized
+
+
+def suggest_document_name(song_text, fallback="Untitled Song"):
+    artist, song_title = parse_song_metadata(song_text)
+    parts = [sanitize_filename_part(part) for part in (artist, song_title) if sanitize_filename_part(part)]
+    if parts:
+        return " - ".join(parts)
+    return fallback
 
 
 def map_chord(chord, frets, strings):
@@ -938,6 +976,48 @@ def format_song_text_as_html(song_text):
 
     return html_output
 
+
+def analyze_song_key(song_text, transpose=0):
+    lines = song_text.split('\n')
+    lines = [line.strip() for line in lines]
+    lines = [line if line else '' for line in lines]
+
+    song_text = '\n'.join(lines)
+    while '\n\n\n' in song_text:
+        song_text = song_text.replace('\n\n\n', '\n\n')
+    lines = song_text.split('\n')
+
+    allchords = []
+    sections = []
+    current_section = []
+    for line in lines:
+        if line.startswith("*") or line.startswith("-"):
+            if current_section:
+                sections.append(current_section)
+                current_section = []
+            continue
+
+        if line == "":
+            if current_section:
+                sections.append(current_section)
+                current_section = []
+            continue
+
+        if is_chord_line(line):
+            for chord in line.split():
+                if is_valid_chord(chord):
+                    allchords.append(chord)
+                    current_section.append(chord)
+
+    if current_section:
+        sections.append(current_section)
+
+    if transpose:
+        allchords = transpose_chords(allchords, transpose)
+        sections = [transpose_chords(section, transpose) for section in sections]
+
+    return analyze_key(allchords, chord_to_notes=chord_to_notes, sections=sections)
+
 def format_song_text_as_pdf(song_text, pdffilename="sfpdfoutput.pdf", preview=True):
     lines = song_text.split('\n')  # split song text into lines
     lines = [line.strip() for line in lines]  # trim all lines
@@ -973,16 +1053,16 @@ def format_song_text_as_pdf(song_text, pdffilename="sfpdfoutput.pdf", preview=Tr
     fontcursive=get ("Render", "CursiveFont","Helvetica-Oblique") #('Helvetica-Oblique', 'Times-Italic')
 
     chordwidth = getF ("Render", "ChordsWidth",120) # about 1/4, possibly smaller
-    chordfont=fontcursive
-    chordfontsize=fontsize-1.5
+    chordfont=get("Render", "ChordFont", fontcursive)
+    chordfontsize=getF("Render", "ChordFontSize", fontsize-1.5)
 
     # Register a new font for italic text
     #pdfmetrics.registerFont(TTFont('ItalicFont', 'ItalicFontFile.ttf'))  # replace 'ItalicFontFile.ttf' with your italic font file
 
 
-    tuning = 'EADGBE'
-    capo=0
-    transpose=0
+    tuning = get("Render", "Tuning", "EADGBE")
+    capo = int(get("Render", "Capo", "0"))
+    transpose = int(get("Render", "Transpose", "0"))
     global chord_overrides
     chord_overrides={}
 
@@ -1002,7 +1082,7 @@ def format_song_text_as_pdf(song_text, pdffilename="sfpdfoutput.pdf", preview=Tr
             c.setFillColorRGB(0.5,0.5,0.5)
 
             c.drawString(marginleft, pagetop+25, "Suggested Key: "+str(rootkey))
-            c.drawString(marginleft, pagetop+12, "Analysis: "+keysuggestions)
+            c.drawString(marginleft, pagetop+12, "Analysis: "+keysuggestions[:180])
             c.setFillColorRGB(0,0,0) 
 
         if song_title is not None:
@@ -1036,7 +1116,36 @@ def format_song_text_as_pdf(song_text, pdffilename="sfpdfoutput.pdf", preview=Tr
 
 
     def parseParams(line):
+        nonlocal font
+        nonlocal fontcursive
+        nonlocal chordfont
+        nonlocal tuning
+        nonlocal capo
+        nonlocal transpose
+        nonlocal fontsize
+        nonlocal chordfontsize
+        nonlocal headersize
+        nonlocal pagetop
         nonlocal marginleft
+        nonlocal maxwidth
+        nonlocal spacing
+        nonlocal chordwidth
+        inline_default_values = {
+            "font": font,
+            "fontcursive": fontcursive,
+            "chordfont": chordfont,
+            "tuning": tuning,
+            "capo": capo,
+            "transpose": transpose,
+            "fontsize": fontsize,
+            "chordfontsize": chordfontsize,
+            "headersize": headersize,
+            "pagetop": pagetop,
+            "marginleft": marginleft,
+            "maxwidth": maxwidth,
+            "spacing": spacing,
+            "chordwidth": chordwidth,
+        }
 
         # Split the string based on '=' and trim the parts
         parts = [part.strip() for part in line.split('=')] #split command=params
@@ -1095,23 +1204,17 @@ def format_song_text_as_pdf(song_text, pdffilename="sfpdfoutput.pdf", preview=Tr
                 print("Halt command received.")
             elif command == 'font': #font names are case sensitive, it seems.
                 if param in ["Courier","Times-Roman","Helvetica","Times-Italic"] or param in pdfmetrics.getRegisteredFontNames():
-                    nonlocal font
                     font = param
             elif command == 'fontcursive':
-                nonlocal fontcursive 
                 fontcursive = str(param)
             elif command == 'chordfont':
-                nonlocal chordfont 
                 chordfont = str(param)
             elif command == 'tuning':
-                nonlocal tuning
                 if len(param)>=3: #we assume 3 bass strings somewhere, and 3 uppers. meanwhile should work for ukelele.
                     tuning = param
             elif command == 'capo':
-                nonlocal capo 
                 capo = roman_to_int(param)
             elif command == 'transpose':
-                nonlocal transpose 
                 if (re.match(r'^-?\d+$', param) is not None):
                 #if str(param).isnumeric():
                     transpose=int(param)
@@ -1124,31 +1227,24 @@ def format_song_text_as_pdf(song_text, pdffilename="sfpdfoutput.pdf", preview=Tr
                 try:
                     param = float(param)
                 except ValueError:
-                    param = get("Default", command, 1.0)
+                    param = inline_default_values.get(command, 1.0)
             
                 # Process each variable assignment
                 if command == 'fontsize':
-                    nonlocal fontsize 
                     fontsize = float(param)
                 if command == 'chordfontsize':
-                    nonlocal chordfontsize 
                     chordfontsize = float(param)
                 elif command == 'headersize':
-                    nonlocal headersize 
                     headersize = float(param)
                 elif command == 'pagetop':
-                    nonlocal pagetop 
                     pagetop = float(param)
                 elif command == 'marginleft':
                     marginleft = float(param)
                 elif command == 'maxwidth':
-                    nonlocal maxwidth 
                     maxwidth= float(param)
                 elif command == 'spacing':
-                    nonlocal spacing 
                     spacing = float(param)
                 elif command == 'chordwidth':
-                    nonlocal chordwidth
                     chordwidth = float(param)
                 else:
                     pass
@@ -1190,17 +1286,9 @@ def format_song_text_as_pdf(song_text, pdffilename="sfpdfoutput.pdf", preview=Tr
 
 
 
-    #iterate over all lines to sum up chords. use that data to determinate the key. we need to do this first so we can print the key on top of each page.
-    allchords=[]
-    for line in lines:
-        if is_chord_line(line):
-            for s in line.split(' '):
-                if is_valid_chord(s):
-                    allchords.append(s)
-
-
-    allchords = transpose_chords(allchords, transpose)
-    rootkey, keysuggestions = make_key_suggestions(allchords)
+    key_analysis = analyze_song_key(song_text, transpose=transpose)
+    rootkey = key_analysis.final.winner.label if key_analysis.final.winner is not None else "nokey"
+    keysuggestions = key_analysis.to_text(verbose=True)
 
     #draw_keyboard_and_notes(c, marginleft, pagetop-100, [0, 2, 4, 5, 7, 9, 11, 12, 14, 16, 17, 19], octaves=1.5)
 
@@ -1434,13 +1522,16 @@ def is_chord_line(line: str) -> bool:
     return is_chord_line
 
 class FormatText(Frame):
-    def __init__(self, parent, on_next):
+    def __init__(self, parent, on_next, on_change=None):
         super().__init__(parent)
         self.on_next = on_next
+        self.on_change = on_change
+        self.file_path = None
+        self.last_saved_text = ""
+        self.is_dirty = False
+        self.last_key_analysis = None
         
         self.create_widgets()
-
-        self.file_path=None
 
         make_background_image()
 
@@ -1473,7 +1564,6 @@ class FormatText(Frame):
 
         self.raw_text = Text(left_pane, wrap=tk.WORD, width=60)
         self.raw_text.pack(expand=True, fill=tk.BOTH)
-        self.raw_text.insert('1.0', "A\nB\nC\nInput Text\n\nA B C\nTest")
 
 
         #context menu
@@ -1486,91 +1576,6 @@ class FormatText(Frame):
 
         self.raw_text.bind("<Button-3>", self.show_context_menu)
 
-        load_button = ttk.Button(left_pane, text="Load Text File", command=self.load_file)
-        load_button.pack(side=tk.LEFT, pady=10)
-
-        load_image_button = tk.Button(left_pane, text="Select image", command=select_image)
-        load_image_button.pack(side=tk.LEFT, pady=10)
-
-
-        save_button = ttk.Button(left_pane, text="Save Text File", command=self.save_file)
-        save_button.pack(side=tk.LEFT, pady=10)
-
-        save_as_button = ttk.Button(left_pane, text="Save Text As...", command=self.save_as_file)
-        save_as_button.pack(side=tk.LEFT, pady=10)
-
-        convert_button = ttk.Button(left_pane, text="Convert", command=self.convert_text)
-        convert_button.pack(side=tk.LEFT, pady=10)
-
-
-        #self.converted_text = HTMLScrolledText(right_pane, html="<h1>Loading...</h1>")
-        #self.converted_text.pack(expand=True, fill=tk.BOTH)
-
-        #next_button = ttk.Button(left_pane, text="Next", command=self.next_module)
-        #next_button.pack(pady=10)
-
-        savepdf_button = ttk.Button(left_pane, text="Save PDF File", command=self.save_pdf_file)
-        savepdf_button.pack(side=tk.LEFT, pady=10)
-
-
-
-        #BPM:
-
-        def bpm_button_pressed():
-            global click_count, first_press_time, last_press_time
-            current_time = time()
-            if current_time - last_press_time > 3:
-                click_count = 0
-            last_press_time=current_time
-            if click_count == 0:
-                first_press_time = current_time
-            click_count += 1
-            update_bpm()
-
-        def update_bpm():
-            global click_count, first_press_time
-            current_time = time()
-            
-            if click_count <= 1:
-                bpm = 100.0
-            else:
-                time_diff = current_time - first_press_time
-                bpm = (click_count - 1) * 60 / time_diff
-
-            bpm_button.config(text="BPM: {:.1f}".format(bpm ))
-
-        bpm_button = tk.Button(
-            left_pane,
-            text="BPM Button",
-            command=bpm_button_pressed,
-            #font=("Arial", 16),
-            #width=12,
-            #height=2
-        )
-        bpm_button.pack(padx=10, pady=10)
-
-
-        #self.infopane = self.middle_pane
-        #self.infotext = Text(middle_pane, wrap=tk.WORD)
-        #self.infotext.pack(expand=True, fill=tk.BOTH)
-        #self.infotext.insert('1.0', "Middle test text")
-
-        # Create a Canvas widget to hold the PDF viewer
-        #self.pdfcanvas = self.middle_pane #tk.Canvas(self.infopane)
-        #self.pdfcanvas.pack(side="left", fill="both", expand=True)
-
-        
-        #canvas.create_window((0, 0), window=pdf_view, anchor="nw")
-        #self.pdfdisplay=ShowPdf().pdf_view(master=self.middle_pane)
-        #self.pdfdisplay=Frame(self, width=200)
-        #self.pdfdisplay.pack(expand=True, fill='both')
-        #pdfdisplay=pdfrender
-        #disp2=disp.pdf_view(self.infopane, pdf_location=r"tmppdf.pdf")
-
-        
-        #paned_window.paneconfig(left_pane, minsize=100, width=200)
-        #paned_window.paneconfig(right_pane, minsize=100, width=200)
-
         paned_window.sashpos(0, 300)
 
         #attach notification to the raw_text
@@ -1579,11 +1584,108 @@ class FormatText(Frame):
         self.raw_text.bind("<<Modified>>", self.text_changed)
 
         self.raw_text.bind("<<Paste>>", self.on_paste)
+        self.raw_text.bind("<<Cut>>", self._after_edit_event)
 
-        self.load_last_file()
+    def _after_edit_event(self, event):
+        self.raw_text.after_idle(lambda: self.text_changed(None))
 
-        # Register a callback function to be called when the window is closed
-        self.raw_text.winfo_toplevel().protocol("WM_DELETE_WINDOW", self.save_last_file)
+    def notify_change(self):
+        if self.on_change is not None:
+            self.on_change(self)
+
+    def get_document_text(self):
+        return self.raw_text.get("1.0", "end-1c")
+
+    def refresh_dirty_state(self):
+        text = self.get_document_text()
+        if self.file_path is None:
+            self.is_dirty = bool(text.strip())
+        else:
+            self.is_dirty = text != self.last_saved_text
+
+    def is_reusable_blank(self):
+        return self.file_path is None and not self.is_dirty and self.get_document_text().strip() == ""
+
+    def set_document_text(self, text, file_path=None, last_saved_text=None, is_dirty=None):
+        self.raw_text.delete("1.0", tk.END)
+        self.raw_text.insert("1.0", text)
+        self.file_path = file_path
+        self.last_saved_text = text if last_saved_text is None and file_path else (last_saved_text or "")
+        if is_dirty is None:
+            self.refresh_dirty_state()
+        else:
+            self.is_dirty = is_dirty
+        self.convert_text()
+        self.notify_change()
+
+    def get_suggested_basename(self):
+        return suggest_document_name(self.get_document_text())
+
+    def get_default_text_path(self):
+        if self.file_path:
+            return self.file_path
+        return self.get_suggested_basename() + ".txt"
+
+    def get_default_pdf_path(self):
+        if self.file_path:
+            return str(Path(self.file_path).with_suffix(".pdf"))
+        return self.get_suggested_basename() + ".pdf"
+
+    def update_window_title(self):
+        root = self.raw_text.winfo_toplevel()
+        doc_name = Path(self.file_path).name if self.file_path else self.get_suggested_basename()
+        root.title(f"Song Formatter - {doc_name}")
+
+    def select_image(self):
+        select_image()
+        self.convert_text()
+
+    def get_bpm_label(self):
+        global click_count, first_press_time
+        current_time = time()
+
+        if click_count <= 1:
+            bpm = 100.0
+        else:
+            time_diff = current_time - first_press_time
+            bpm = (click_count - 1) * 60 / time_diff
+
+        return "Tap BPM: {:.1f}".format(bpm)
+
+    def tap_bpm(self):
+        global click_count, first_press_time, last_press_time
+        current_time = time()
+        if current_time - last_press_time > 3:
+            click_count = 0
+        last_press_time = current_time
+        if click_count == 0:
+            first_press_time = current_time
+        click_count += 1
+        return self.get_bpm_label()
+
+    def cut_selection(self):
+        self.raw_text.event_generate("<<Cut>>")
+
+    def copy_selection(self):
+        self.raw_text.event_generate("<<Copy>>")
+
+    def paste_clipboard(self):
+        self.raw_text.event_generate("<<Paste>>")
+
+    def paste_as_new(self):
+        try:
+            clipboard_text = self.raw_text.clipboard_get()
+        except tk.TclError:
+            messagebox.showinfo("Paste As New", "Clipboard does not contain text.")
+            return
+
+        self.set_document_text(clipboard_text, file_path=None)
+        self.raw_text.focus_set()
+
+    def select_all(self):
+        self.raw_text.tag_add("sel", "1.0", "end")
+        self.raw_text.mark_set("insert", "1.0")
+        self.raw_text.see("insert")
 
 
     def text_changed(self, event):
@@ -1595,85 +1697,96 @@ class FormatText(Frame):
     def on_paste(self, event):
         # Clear the file path when a paste occurs
         self.file_path = None
+        self.raw_text.after_idle(lambda: (self.refresh_dirty_state(), self.notify_change()))
         
 
     def handle_timer(self):
         self.timer_id = None
         #self.datachanged()
+        self.refresh_dirty_state()
         self.convert_text()
-
-
-    def save_last_file(self):
-        last = "lastopened.txt"
-        with open(last, "w") as file:
-            file.write(self.raw_text.get("1.0", "end-1c"))
-        self.raw_text.winfo_toplevel().destroy()
-
-    def load_last_file(self):
-        #load the last file, if any
-        last = "lastopened.txt"
-        if (os.path.isfile(last)):
-            with open (last, "r") as file:
-                self.raw_text.delete(1.0, tk.END)
-                self.raw_text.insert (1.0, file.read())
+        self.notify_change()
 
     def load_file(self):
         file_path = filedialog.askopenfilename()
         if file_path:
             with open(file_path, "r") as file:
-                self.raw_text.delete(1.0, tk.END)
-                self.raw_text.insert(tk.INSERT, file.read())
-            self.file_path = file_path
-
-            self.text_changed (self)
+                contents = file.read()
+            self.set_document_text(contents, file_path=file_path, last_saved_text=contents, is_dirty=False)
 
     def save_file(self):
-        # If the file_path is set (a file was loaded), we use that as the default filename
-        default_filename = self.file_path if self.file_path else None
+        if self.file_path:
+            current_text = self.get_document_text()
+            with open(self.file_path, "w") as file:
+                file.write(current_text)
+            self.last_saved_text = current_text
+            self.is_dirty = False
+            self.notify_change()
+            return
 
-        # If no file was loaded, we extract the filename from the first two lines of text
-        if not default_filename:
-            first_two_lines = self.raw_text.get(1.0, 'end-1c').split('\n')[:2]
-            default_filename = "_".join(first_two_lines) + ".txt"
-
-        # Ask for a filename (if a file was loaded or a filename was extracted, suggest that as default)
-        file_path = filedialog.asksaveasfilename(initialfile=default_filename, defaultextension=".txt")
-
-        # If a file_path was returned (the user didn't cancel the dialog)
-        if file_path:
-            # Check if the file already exists and if so, ask for overwrite confirmation
-            if not os.path.exists(file_path) or messagebox.askyesno('Confirmation', 'File exists. Do you want to overwrite?'):
-                # If the file doesn't exist, or the user agrees to overwrite, we can write to the file
-                with open(file_path, "w") as file:
-                    file.write(self.raw_text.get(1.0, tk.END))
-                # And update the file_path attribute
-                self.file_path = file_path
+        self.save_as_file()
 
     def save_as_file(self):
-        self.save_file()
+        file_path = filedialog.asksaveasfilename(
+            initialfile=self.get_default_text_path(),
+            defaultextension=".txt",
+        )
+        if file_path:
+            if not os.path.exists(file_path) or messagebox.askyesno('Confirmation', 'File exists. Do you want to overwrite?'):
+                current_text = self.get_document_text()
+                with open(file_path, "w") as file:
+                    file.write(current_text)
+                self.file_path = file_path
+                self.last_saved_text = current_text
+                self.is_dirty = False
+                self.notify_change()
 
     def save_pdf_file(self):
-        # If the file_path is set (a file was loaded), we use that as the default filename
-        default_filename = None #self.file_path if self.file_path else None
-
-        # If no file was loaded, we extract the filename from the first two lines of text
-        if not default_filename:
-            first_two_lines = self.raw_text.get(1.0, 'end-1c').split('\n')[:2]
-            default_filename = "_".join(first_two_lines) + ".pdf"
-
-        # Ask for a filename (if a file was loaded or a filename was extracted, suggest that as default)
-        file_path = filedialog.asksaveasfilename(initialfile=default_filename, defaultextension=".pdf")
+        file_path = filedialog.asksaveasfilename(
+            initialfile=self.get_default_pdf_path(),
+            defaultextension=".pdf",
+        )
 
         # If a file_path was returned (the user didn't cancel the dialog)
         if file_path:
             # Check if the file already exists and if so, ask for overwrite confirmation
             if not os.path.exists(file_path) or messagebox.askyesno('Confirmation', 'File exists. Do you want to overwrite?'):
                 # If the file doesn't exist, or the user agrees to overwrite, we can write to the file
-                format_song_text_as_pdf(self.raw_text.get(1.0, tk.END), file_path, False)
+                format_song_text_as_pdf(self.get_document_text(), file_path, False)
+
+    def export_both(self):
+        file_path = filedialog.asksaveasfilename(
+            initialfile=self.get_default_text_path(),
+            defaultextension=".txt",
+        )
+        if not file_path:
+            return
+
+        text_path = Path(file_path)
+        pdf_path = text_path.with_suffix(".pdf")
+
+        overwrite_text = (not text_path.exists()) or messagebox.askyesno('Confirmation', f'{text_path.name} exists. Do you want to overwrite it?')
+        if not overwrite_text:
+            return
+
+        overwrite_pdf = (not pdf_path.exists()) or messagebox.askyesno('Confirmation', f'{pdf_path.name} exists. Do you want to overwrite it?')
+        if not overwrite_pdf:
+            return
+
+        with text_path.open("w") as file:
+            current_text = self.get_document_text()
+            file.write(current_text)
+        format_song_text_as_pdf(current_text, str(pdf_path), False)
+
+        self.file_path = str(text_path)
+        self.last_saved_text = current_text
+        self.is_dirty = False
+        self.notify_change()
 
 
     def convert_text(self):
-        raw_text = self.raw_text.get(1.0, tk.END)
+        raw_text = self.get_document_text()
+        self.last_key_analysis = analyze_song_key(raw_text)
 
         format_song_text_as_pdf(raw_text, temp_file.name)
 

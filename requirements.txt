@@ -1,0 +1,5 @@
+markdown
+Pillow
+PyMuPDF
+reportlab
+tkhtmlview
