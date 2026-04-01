@@ -13,6 +13,8 @@ The application is currently source-first and workspace-oriented:
 - editing is autosaved to a local workspace
 - exporting text and PDF is separate from in-app editing
 
+The current project workflow assumes running from source. There is no maintained packaged install or binary release flow at the moment.
+
 ## Features
 
 - Live PDF preview while editing
@@ -38,6 +40,8 @@ Requirements:
 - Python 3.10+
 - Tk support in your Python installation
 
+At the moment, the repository does not include Python packaging metadata such as `pyproject.toml`, so the supported path is to run from source rather than install it as a package.
+
 Recommended local workflow:
 
 ```bash
@@ -49,6 +53,14 @@ Recommended local workflow:
 - create `.venv/` if needed
 - install or update the packages from `requirements.txt`
 - launch the app
+
+On Windows, use:
+
+```bat
+winrun.bat
+```
+
+`winrun.bat` performs the same setup steps using the local Windows Python launcher.
 
 If you prefer manual setup:
 
