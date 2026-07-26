@@ -4,42 +4,53 @@ from tkinter import Canvas, ttk, filedialog, Text, Frame
 from tkinter import messagebox
 #from tkinterhtml import HtmlFrame
 from tkhtmlview import HTMLScrolledText
-from reportlab.pdfgen import canvas
-from reportlab.pdfbase import pdfmetrics
-#from reportlab.pdfbase.ttfonts import TTFont
-from reportlab.lib.pagesizes import A4
-from reportlab.lib.units import mm,cm
-from reportlab.graphics.shapes import Circle, Rect, Line
-from reportlab.graphics import renderPDF
-from reportlab.lib.colors import white,black,red
-# pdfviewer (PyMuPDF/fitz-based preview) is no longer used — the live preview now
-# draws via render_backend.TkCanvasBackend. Kept as an optional import so the app
-# runs without PyMuPDF installed.
+# PDF generation: reportlab where it is installed, pxxpdf otherwise.
+#
+# This is the standard portability idiom, and it is the seam that lets the app be
+# compiled by pxx: pxx's Nil-Python frontend cannot load a pip package, so the
+# reportlab import fails there and pxxpdf - a pxx library presenting the same
+# canvas API over pdfgen - answers instead. Under CPython nothing changes: the
+# first branch is taken and the export path is untouched.
 try:
-    from pdfviewer import ShowPdf
+    from reportlab.pdfgen import canvas
+    from reportlab.pdfbase import pdfmetrics
+    from reportlab.lib.pagesizes import A4
+    from reportlab.lib.units import mm, cm
+    from reportlab.lib.colors import white, black, red
+    from reportlab.lib.utils import ImageReader
 except ImportError:
-    ShowPdf = None
+    from pxxpdf import canvas
+    from pxxpdf import pdfmetrics
+    from pxxpdf.pagesizes import A4
+    from pxxpdf.units import mm, cm
+    from pxxpdf.colors import white, black, red
+    from pxxpdf.utils import ImageReader
+
+# PIL does the background-image effects (resize, opacity, edge blur) and reads
+# image files. Optional: it is a CPython C extension, so it is absent under pxx,
+# where pdfgen embeds PNG/JPEG itself. HAVE_PIL guards the entry points that use it.
+try:
+    from PIL import Image, ImageEnhance, ImageFilter, ImageDraw
+    HAVE_PIL = True
+except ImportError:
+    HAVE_PIL = False
+
 import os
 import re
 import html
-from settings import get,set, getF, getI
-from key_analysis import analyze_key
 import ast
-from collections import Counter
-from reportlab.pdfgen import canvas
-from PIL import Image, ImageEnhance, ImageFilter, ImageDraw
-from io import BytesIO
-from reportlab.lib.utils import ImageReader
 import math
-from reportlab.pdfbase import pdfmetrics
-    #import reportlab.lib.fonts
-from tkinter import filedialog, messagebox
 import atexit
 import tempfile
 import subprocess
 import sys
+from io import BytesIO
 from time import time
 from pathlib import Path
+from collections import Counter
+from tkinter import filedialog, messagebox
+from settings import get,set, getF, getI
+from key_analysis import analyze_key
 
 background_image = None
 background_image_key = None  # settings the cached background_image was built from
@@ -506,11 +517,17 @@ def process_image(width, height, opacity, filename):
 def make_background_image(force=False):
     """(Re)build the processed background image from the current settings.
 
+    Without PIL there is nothing to process the image with, so there is no
+    background: reported once, not silently skipped.
+
     Cheap to call repeatedly: the result is cached against the settings it was
     built from, so picking another image or changing its size/opacity takes
     effect on the next render instead of only after a restart.
     """
     global background_image, background_image_key
+    if not HAVE_PIL:
+        background_image=None
+        return None
     try:
         w,h=map(int, get("Background","Size", "200x100").split("x"))
         opacity=int(get("Background","Opacity", "50"))
@@ -563,6 +580,9 @@ def draw_background_image(c):
     c.drawImage(image_reader, x, y, w, h, mask='auto')
 
 def draw_image_from_file(c, filename, x, y, width, height):
+    if not HAVE_PIL:
+        print ("Cannot draw", filename, ": no imaging support (PIL)")
+        return
     try:
         img = Image.open(filename)
         if width==0:
@@ -605,6 +625,10 @@ def transpose_chords(chords, transpose_value):
 
 
 def open_image_dialog():
+    if not HAVE_PIL:
+        messagebox.showwarning("Select Image",
+                               "Images need PIL, which is not installed.")
+        return None
     # Open the file dialog and get the selected filename
     filename = filedialog.askopenfilename(filetypes=(("Image files", "*.png;*.jpg;*.jpeg;*.bmp;*.tif;*.gif"), ("All files", "*.*")))
 
