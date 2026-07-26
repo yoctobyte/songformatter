@@ -55,7 +55,24 @@ temp_file=tempfile.NamedTemporaryFile(suffix='.pdf', delete=False)
 # would block rewriting it on Windows.
 temp_file.close()
 
-print ("Temp file:", temp_file.name)
+
+def debug(*args):
+    """Diagnostic console output, silent unless asked for.
+
+    Enabled by the SONGFORMATTER_DEBUG environment variable or [Misc] Debug=1.
+    Real problems keep using print(); this is for the chord-analysis chatter.
+    """
+    if os.environ.get("SONGFORMATTER_DEBUG"):
+        print (*args)
+        return
+    try:
+        if int(get("Misc", "Debug", "0")):
+            print (*args)
+    except (ValueError, TypeError):
+        pass
+
+
+debug ("Temp file:", temp_file.name)
 
 #BPM:
 first_press_time = 0.0
@@ -1497,7 +1514,7 @@ def format_song_text_as_pdf(song_text, pdffilename="sfpdfoutput.pdf", preview=Tr
 
     #for chord in chordsfound:
     #    print (str(chord_to_tones(chord)))
-    print (str(chordsfound))
+    debug (str(chordsfound))
 
     
 
@@ -1572,9 +1589,9 @@ def is_chord_line(line: str) -> bool:
     # Return true if more than 65% of words are chords and there are more than 3 words
     is_chord_line = len(chords) / len(words) > 0.65 
 
-    # If there are at least 2 recognized chords, print any unrecognized chords
+    # If there are at least 2 recognized chords, report any unrecognized chords
     if len(chords) >= 2 and non_chords:
-        print(f"Unrecognized chords in line: {', '.join(non_chords)}")
+        debug(f"Unrecognized chords in line: {', '.join(non_chords)}")
 
     return is_chord_line
 

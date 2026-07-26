@@ -40,6 +40,7 @@ DEFAULT_SETTINGS = {
     "Misc": {
         "A4MarkerColor": "[0.7, 0.7, 0.5]",
         "MarginMarkerColor": "[0.9, 0.9, 0.7]",
+        "Debug": "0",
     },
     "Format": {
         "PageBreakFlexibleLines": "4",
@@ -50,6 +51,7 @@ BOOLEAN_SETTINGS = {
     ("Options", "PrintGuitarChords"),
     ("Options", "PrintPianoChords"),
     ("Background", "Show"),
+    ("Misc", "Debug"),
 }
 
 class CasePreservingConfigParser(configparser.ConfigParser):
