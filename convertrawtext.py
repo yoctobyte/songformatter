@@ -42,6 +42,7 @@ from time import time
 from pathlib import Path
 
 background_image = None
+background_image_key = None  # settings the cached background_image was built from
 
 chord_overrides={} #abusing a global for this data.
 
@@ -485,20 +486,36 @@ def process_image(width, height, opacity, filename):
 
     return img_byte_arr
 
-def make_background_image():
-    #x,y=get("Background","Position", "250x100").split('x')
-    try:
+def make_background_image(force=False):
+    """(Re)build the processed background image from the current settings.
 
+    Cheap to call repeatedly: the result is cached against the settings it was
+    built from, so picking another image or changing its size/opacity takes
+    effect on the next render instead of only after a restart.
+    """
+    global background_image, background_image_key
+    try:
         w,h=map(int, get("Background","Size", "200x100").split("x"))
         opacity=int(get("Background","Opacity", "50"))
         imagefile=get("Background", "Image", "")
-        if imagefile=="" or not os.path.exists(imagefile):
-            return None
-        global background_image
-        background_image=process_image(w,h,0.01*opacity, imagefile)
-        return background_image
     except ValueError:
         print ("Error making image, maybe invalid setting data.")
+        return None
+
+    key=(imagefile, w, h, opacity)
+    if imagefile=="" or not os.path.exists(imagefile):
+        background_image=None
+        background_image_key=key
+        return None
+    if not force and key==background_image_key and background_image is not None:
+        return background_image
+    try:
+        background_image=process_image(w,h,0.01*opacity, imagefile)
+    except Exception as exc:
+        print ("Error making image:", exc)
+        background_image=None
+    background_image_key=key
+    return background_image
 
 
 
@@ -508,9 +525,10 @@ def draw_transparent_image(c, x, y, width, height, img_byte_arr):
     c.drawImage(img, x, y, width, height)
 
 def draw_background_image(c):
-    if background_image==None:
-        return
     if not int(get("Background", "Show", 1)):
+        return
+    # rebuild if the settings changed since the last render (no-op otherwise)
+    if make_background_image() is None:
         return
     x,y=map(int, get("Background","Position", "250x100").split('x'))
     w,h=map(int, get("Background","Size", "200x100").split('x'))
@@ -522,8 +540,10 @@ def draw_background_image(c):
     img = Image.open(BytesIO(background_image)) #, width=w, height=h)
     #img.save ("tmpbgimg.png")
     image_reader = ImageReader(img)
-    # Draw the image on the canvas
-    c.drawImage(image_reader, x, y, w, h)
+    # mask='auto' keeps the alpha channel process_image() applied for the
+    # Opacity setting; without it reportlab drops it and the background is
+    # exported fully opaque.
+    c.drawImage(image_reader, x, y, w, h, mask='auto')
 
 def draw_image_from_file(c, filename, x, y, width, height):
     try:
@@ -531,13 +551,13 @@ def draw_image_from_file(c, filename, x, y, width, height):
         if width==0:
             width=img.width
         if height==0:
-            width=img.height
+            height=img.height  # was assigning width, leaving height 0 (invisible)
         reader=ImageReader(img)
         #c.setBlendMode(canvas.blendmode.MULTIPLY)
         c.drawImage(reader, x, y, width, height,mask=[250,255,250,255,250,255])
         #c.setBlendMode(canvas.blendmode.NORMAL)
-    except:
-        pass
+    except Exception as exc:
+        print ("Could not draw image", filename, ":", exc)
 
 
 
@@ -576,7 +596,6 @@ def open_image_dialog():
         try:
             # Try to open the file with PIL to check if it's a valid image file
             Image.open(filename)
-            make_background_image()
             return filename
         except IOError:
             messagebox.showwarning("Invalid image file", "The selected file is not a valid image file.")
@@ -587,10 +606,15 @@ def open_image_dialog():
 
 def select_image():
     background = open_image_dialog()
+    if not background:
+        return None  # dialog cancelled: keep the current background
     set("Background", "Image", background)
     get("Background", "Position", "250x20")
     get("Background", "Size", "200x100")
     set("Background", "Show", "1")
+    # rebuild AFTER writing the setting, so the pick shows up in this session
+    make_background_image(force=True)
+    return background
 
 
 
@@ -1069,6 +1093,10 @@ def format_song_text_as_pdf(song_text, pdffilename="sfpdfoutput.pdf", preview=Tr
 
 
     pagetop = 824-getF ("Render", "TopMargin",24)
+    # bound up front: parseParams() reads y (an image= without an explicit
+    # position falls back to it) and runs during the header scan, before the
+    # song body sets it.
+    y = pagetop
     marginleft=getI ("Render", "LeftMarginLeft",80)
     maxwidth=595-marginleft-getF ("Render", "RightMargin",36)
     pagebottom=getF ("Render", "BottomMargin",36)

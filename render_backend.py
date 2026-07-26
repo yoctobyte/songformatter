@@ -87,6 +87,76 @@ def pdf_string_width(text, font_name, size_pt):
         return None
 
 
+def _as_pil_image(img):
+    """Coerce what the renderer passes to drawImage into a PIL image, or None.
+
+    The song renderer hands over a PIL image, a reportlab ImageReader, or a
+    filename, depending on the call site.
+    """
+    if img is None:
+        return None
+    if hasattr(img, "resize") and hasattr(img, "size"):
+        return img                      # already a PIL image
+    inner = getattr(img, "_image", None)  # reportlab ImageReader
+    if inner is not None and hasattr(inner, "resize"):
+        return inner
+    try:
+        from PIL import Image
+    except ImportError:
+        return None
+    if isinstance(img, str):
+        try:
+            return Image.open(img)
+        except Exception:
+            return None
+    # ImageReader without a cached PIL image: rebuild from its raw RGB data
+    try:
+        w, h = img.getSize()
+        return Image.frombytes("RGB", (w, h), img.getRGBData())
+    except Exception:
+        return None
+
+
+def _apply_color_key(img, mask):
+    """Make pixels inside a reportlab colour-key mask transparent.
+
+    reportlab's mask is [rmin, rmax, gmin, gmax, bmin, bmax] in 0..255.
+    """
+    if not mask or len(mask) < 6:
+        return img
+    try:
+        rmin, rmax, gmin, gmax, bmin, bmax = [int(v) for v in mask[:6]]
+    except (TypeError, ValueError):
+        return img
+    px = img.load()
+    w, h = img.size
+    for iy in range(h):
+        for ix in range(w):
+            r, g, b, a = px[ix, iy]
+            if rmin <= r <= rmax and gmin <= g <= gmax and bmin <= b <= bmax:
+                px[ix, iy] = (r, g, b, 0)
+    return img
+
+
+def _as_tk_photo(pil, w_px, h_px, mask=None):
+    """Scaled PIL image -> Tk PhotoImage (PNG data, so alpha survives)."""
+    try:
+        from PIL import Image
+        from io import BytesIO
+        import base64
+        import tkinter as tk
+    except ImportError:
+        return None
+    try:
+        img = pil.convert("RGBA").resize((w_px, h_px), Image.LANCZOS)
+        img = _apply_color_key(img, mask)
+        buf = BytesIO()
+        img.save(buf, format="PNG")
+        return tk.PhotoImage(data=base64.b64encode(buf.getvalue()))
+    except Exception:
+        return None
+
+
 def _map_font(name, size_pt, geo):
     """reportlab standard-14 font name -> Tk (family, size, *styles).
 
@@ -140,6 +210,7 @@ class TkCanvasBackend:
         self.page_gap = page_gap
         self.page_index = 0
         self._descents = {}  # font tuple -> descent in canvas pixels
+        self._images = []    # PhotoImages, kept alive while they're on the canvas
         # drawing state
         self._fill = "#000000"
         self._stroke = "#000000"
@@ -256,11 +327,30 @@ class TkCanvasBackend:
                                 outline=(self._stroke if stroke else ""),
                                 width=self._w(self._linewidth))
 
-    # --- images (deferred: background-image path). Best-effort no-op for now. ---
+    # --- images ---
     def drawImage(self, img, x, y, width=0, height=0, mask=None, **kw):
-        # TODO: render image to a Tk PhotoImage kept alive on self._images.
-        # Background images are optional; skipped in the preview MVP.
-        pass
+        """reportlab drawImage: (x, y) is the LOWER-LEFT corner, size in points.
+
+        The image is resized to its on-screen pixel size and handed to Tk as a
+        PNG, which preserves alpha (both the background image's own transparency
+        and a reportlab colour-key `mask`). Silently skipped when no imaging
+        support is available — an absent background is better than a dead preview.
+        """
+        pil = _as_pil_image(img)
+        if pil is None:
+            return
+        if not width:
+            width = pil.size[0]
+        if not height:
+            height = pil.size[1]
+        w_px = max(1, int(round(width * self.geo)))
+        h_px = max(1, int(round(height * self.geo)))
+        photo = _as_tk_photo(pil, w_px, h_px, mask)
+        if photo is None:
+            return
+        # keep a reference: Tk drops the pixels when the PhotoImage is collected
+        self._images.append(photo)
+        self.cv.create_image(self._x(x), self._y(y), image=photo, anchor="sw")
 
     # --- page / lifecycle ---
     def showPage(self):
