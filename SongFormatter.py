@@ -261,6 +261,12 @@ def refresh_preview():
     focus_editor()
 
 
+def preview_pdf():
+    doc = get_active_document()
+    if doc is not None:
+        doc.preview_pdf_file()
+
+
 def open_settings():
     settings_module.populate_frame()
     select_main_tab(settings_module)
@@ -462,7 +468,7 @@ def show_version():
 
 def check_buttons_greyed():
     active = "normal" if get_active_document() is not None else "disabled"
-    for label in ["Save", "Save as...", "Save PDF", "Export Both", "Close Document"]:
+    for label in ["Save", "Save as...", "Save PDF", "Preview PDF", "Export Both", "Close Document"]:
         file_menu.entryconfigure(label, state=active)
 
 
@@ -537,6 +543,7 @@ ttk.Button(top_panel, text="Save PDF", command=save_pdf).pack(side=tk.LEFT, padx
 ttk.Button(top_panel, text="Export Both", command=export_both).pack(side=tk.LEFT, padx=(0, 6))
 ttk.Separator(top_panel, orient=tk.VERTICAL).pack(side=tk.LEFT, fill=tk.Y, padx=8, pady=2)
 ttk.Button(top_panel, text="Refresh Preview", command=refresh_preview).pack(side=tk.LEFT, padx=(0, 6))
+ttk.Button(top_panel, text="Preview PDF", command=preview_pdf).pack(side=tk.LEFT, padx=(0, 6))
 ttk.Button(top_panel, text="Select Image", command=select_background_image).pack(side=tk.LEFT, padx=(0, 6))
 ttk.Button(top_panel, text="Settings", command=open_settings).pack(side=tk.LEFT, padx=(0, 6))
 
@@ -555,6 +562,7 @@ file_menu.add_separator()
 file_menu.add_command(label="Save", command=save_document)
 file_menu.add_command(label="Save as...", command=save_document_as)
 file_menu.add_command(label="Save PDF", command=save_pdf)
+file_menu.add_command(label="Preview PDF", command=preview_pdf)
 file_menu.add_command(label="Export Both", command=export_both)
 file_menu.add_separator()
 file_menu.add_command(label="Exit", command=on_app_close)
@@ -569,6 +577,7 @@ view_menu.add_command(label="Documents", command=lambda: select_main_tab(documen
 view_menu.add_command(label="Settings", command=open_settings)
 
 tools_menu.add_command(label="Refresh Preview", command=refresh_preview)
+tools_menu.add_command(label="Preview PDF", command=preview_pdf)
 tools_menu.add_command(label="Select Image", command=select_background_image)
 tools_menu.add_command(label="Tap BPM", command=apply_bpm)
 tools_menu.add_command(label="Export Both", command=export_both)

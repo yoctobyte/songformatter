@@ -36,6 +36,8 @@ from reportlab.pdfbase import pdfmetrics
 from tkinter import filedialog, messagebox
 import atexit
 import tempfile
+import subprocess
+import sys
 from time import time
 from pathlib import Path
 
@@ -65,6 +67,21 @@ def del_tmp_file():
         os.remove(temp_file.name)
 
 atexit.register(del_tmp_file)
+
+
+def open_in_system_viewer(path):
+    """Hand a file to the platform's default application.
+
+    Used by the Preview PDF action: the real PDF is written to a temp file and
+    opened in whatever viewer the desktop is configured with, so the exported
+    layout can be inspected exactly as it will be shipped.
+    """
+    if sys.platform.startswith("win"):
+        os.startfile(path)
+        return
+    opener = "open" if sys.platform == "darwin" else "xdg-open"
+    subprocess.Popen([opener, path],
+                     stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 
 
 def seems_like_a_chord(chord):
@@ -1765,6 +1782,25 @@ class FormatText(Frame):
             if not os.path.exists(file_path) or messagebox.askyesno('Confirmation', 'File exists. Do you want to overwrite?'):
                 # If the file doesn't exist, or the user agrees to overwrite, we can write to the file
                 format_song_text_as_pdf(self.get_document_text(), file_path, False)
+
+    def preview_pdf_file(self):
+        """Render the real PDF to a temp file and open the system viewer.
+
+        The on-canvas live preview is a parallel drawing of the same calls; this
+        shows the actual PDF output, which is what layout glitches must be judged
+        against.
+        """
+        pdf_path = temp_file.name
+        try:
+            format_song_text_as_pdf(self.get_document_text(), pdf_path, False)
+        except Exception as exc:
+            messagebox.showerror("Preview PDF", f"Could not build the PDF:\n{exc}")
+            return
+        try:
+            open_in_system_viewer(pdf_path)
+        except Exception as exc:
+            messagebox.showerror("Preview PDF",
+                                 f"PDF written to {pdf_path}, but no viewer could be started:\n{exc}")
 
     def export_both(self):
         file_path = filedialog.asksaveasfilename(
