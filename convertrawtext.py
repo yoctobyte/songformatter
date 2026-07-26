@@ -12,7 +12,13 @@ from reportlab.lib.units import mm,cm
 from reportlab.graphics.shapes import Circle, Rect, Line
 from reportlab.graphics import renderPDF
 from reportlab.lib.colors import white,black,red
-from pdfviewer import ShowPdf
+# pdfviewer (PyMuPDF/fitz-based preview) is no longer used — the live preview now
+# draws via render_backend.TkCanvasBackend. Kept as an optional import so the app
+# runs without PyMuPDF installed.
+try:
+    from pdfviewer import ShowPdf
+except ImportError:
+    ShowPdf = None
 import os
 import re
 import html
@@ -42,6 +48,9 @@ chord_overrides={} #abusing a global for this data.
 temp_file='tmppdf.pdf'
 
 temp_file=tempfile.NamedTemporaryFile(suffix='.pdf', delete=False)
+# Only the name is used (Preview PDF rewrites the path); keeping the handle open
+# would block rewriting it on Windows.
+temp_file.close()
 
 print ("Temp file:", temp_file.name)
 
@@ -1018,7 +1027,10 @@ def analyze_song_key(song_text, transpose=0):
 
     return analyze_key(allchords, chord_to_notes=chord_to_notes, sections=sections)
 
-def format_song_text_as_pdf(song_text, pdffilename="sfpdfoutput.pdf", preview=True):
+def format_song_text_as_pdf(song_text, pdffilename="sfpdfoutput.pdf", preview=True, backend=None):
+    # backend=None -> export to a real PDF via reportlab (unchanged path).
+    # backend=<obj> -> draw the SAME calls onto an injected canvas backend
+    # (e.g. render_backend.TkCanvasBackend for the live on-screen preview).
     lines = song_text.split('\n')  # split song text into lines
     lines = [line.strip() for line in lines]  # trim all lines
     lines = [line if line else '' for line in lines]  # ensure all blank lines are truly blank
@@ -1029,8 +1041,8 @@ def format_song_text_as_pdf(song_text, pdffilename="sfpdfoutput.pdf", preview=Tr
         song_text = song_text.replace('\n\n\n', '\n\n')
     lines = song_text.split('\n')
 
-    # create a new PDF using ReportLab
-    c = canvas.Canvas(pdffilename, pagesize=A4)
+    # create a new PDF using ReportLab, or draw onto the injected backend
+    c = backend if backend is not None else canvas.Canvas(pdffilename, pagesize=A4)
     # A4 paper measures 210 x 297 millimeters or 8.27 x 11.69 inches, which is 595 x 842 points in ReportLab's default units.
     # US Letter size is 8.5 x 11 inches (612 x 792 points), and A4 size is 8.27 x 11.69 inches (595 x 842 points). 
     # The intersection of these two sizes is approximately 8.27 x 11 inches (595 x 792 points)
@@ -1788,15 +1800,52 @@ class FormatText(Frame):
         raw_text = self.get_document_text()
         self.last_key_analysis = analyze_song_key(raw_text)
 
-        format_song_text_as_pdf(raw_text, temp_file.name)
-
         for w in self.middle_pane.winfo_children():
             w.destroy()
-
         self.middle_pane.children.clear()
 
-        sp=ShowPdf()
-        sp.pdf_view(master=self.middle_pane, pdf_location=temp_file.name)
+        # Live preview: draw the song straight onto a Tk canvas via the parallel
+        # backend — same drawing calls that produce the PDF, no render-to-PDF +
+        # PyMuPDF-to-pixmap round trip. Faster and no fitz dependency.
+        import tkinter as tk
+        from render_backend import TkCanvasBackend, PAGE_W, PAGE_H
+
+        yscroll = tk.Scrollbar(self.middle_pane, orient="vertical")
+        xscroll = tk.Scrollbar(self.middle_pane, orient="horizontal")
+        yscroll.pack(side="right", fill="y")
+        xscroll.pack(side="bottom", fill="x")
+        cv = tk.Canvas(self.middle_pane, background="white",
+                       yscrollcommand=yscroll.set, xscrollcommand=xscroll.set)
+        cv.pack(side="left", fill="both", expand=True)
+        yscroll.config(command=cv.yview)
+        xscroll.config(command=cv.xview)
+
+        # The page is drawn at physical size scaled to fit the pane's width, so
+        # the preview shows the whole page like a PDF viewer does. Redrawn on
+        # resize (debounced), since Tk item fonts don't follow canvas.scale.
+        self._preview_canvas = cv
+        self._preview_text = raw_text
+        self._preview_width = 0
+        self._preview_job = None
+
+        def draw(width_px):
+            cv.delete("all")
+            backend = TkCanvasBackend(cv, page_w=PAGE_W, page_h=PAGE_H,
+                                      fit_width_px=width_px)
+            format_song_text_as_pdf(self._preview_text, backend=backend, preview=True)
+            self._preview_width = width_px
+
+        def on_resize(event=None):
+            width_px = cv.winfo_width()
+            if width_px < 50 or abs(width_px - self._preview_width) < 4:
+                return
+            if self._preview_job is not None:
+                cv.after_cancel(self._preview_job)
+            self._preview_job = cv.after(120, lambda: draw(cv.winfo_width()))
+
+        cv.bind("<Configure>", on_resize)
+        self.middle_pane.update_idletasks()
+        draw(max(cv.winfo_width(), 200))
         
 
 
