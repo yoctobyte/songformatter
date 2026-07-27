@@ -3,7 +3,6 @@ import tkinter as tk
 from tkinter import Canvas, ttk, filedialog, Text, Frame
 from tkinter import messagebox
 #from tkinterhtml import HtmlFrame
-from tkhtmlview import HTMLScrolledText
 # PDF generation: reportlab where it is installed, pxxpdf otherwise.
 #
 # This is the standard portability idiom, and it is the seam that lets the app be
