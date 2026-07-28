@@ -1635,9 +1635,6 @@ class FormatText(Frame):
         self.context_menu.post(event.x_root, event.y_root)
 
 
-    def select_all_text():
-        raw_text.tag_add("sel", "1.0", "end")
-
     def create_widgets(self):
         paned_window = ttk.PanedWindow(self, orient=tk.HORIZONTAL)
         paned_window.pack(expand=True, fill=tk.BOTH)
