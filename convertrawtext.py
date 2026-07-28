@@ -1053,7 +1053,6 @@ def format_song_text_as_html(song_text):
 
     # add chords
     html_output += '</table><br><br><table>'
-    chordsfound.sort()
 
     #for i, chord in enumerate(chordsfound):
     #    if i % 8 == 0:
