@@ -147,6 +147,16 @@ def sanitize_filename_part(value):
     return sanitized
 
 
+def normalize_newlines(text):
+    """Turn CRLF, lone CR and the Unicode line/paragraph separators into \\n.
+
+    Text copied from browsers and Windows apps carries these; Tk's Text widget
+    shows each stray one as a box.
+    """
+    return (text.replace("\r\n", "\n").replace("\r", "\n")
+                .replace(" ", "\n").replace(" ", "\n"))
+
+
 def suggest_document_name(song_text, fallback="Untitled Song"):
     artist, song_title = parse_song_metadata(song_text)
     parts = [sanitize_filename_part(part) for part in (artist, song_title) if sanitize_filename_part(part)]
@@ -1700,6 +1710,7 @@ class FormatText(Frame):
         return self.file_path is None and not self.is_dirty and self.get_document_text().strip() == ""
 
     def set_document_text(self, text, file_path=None, last_saved_text=None, is_dirty=None):
+        text = normalize_newlines(text)
         self.raw_text.delete("1.0", tk.END)
         self.raw_text.insert("1.0", text)
         self.file_path = file_path
@@ -1790,7 +1801,20 @@ class FormatText(Frame):
     def on_paste(self, event):
         # Clear the file path when a paste occurs
         self.file_path = None
+        # Insert the clipboard ourselves, with its line endings normalized,
+        # instead of letting Tk's default paste bring in stray \r characters.
+        try:
+            clipboard_text = self.raw_text.clipboard_get()
+        except tk.TclError:
+            return "break"
+        try:
+            self.raw_text.delete("sel.first", "sel.last")
+        except tk.TclError:
+            pass  # no selection to replace
+        self.raw_text.insert("insert", normalize_newlines(clipboard_text))
+        self.raw_text.see("insert")
         self.raw_text.after_idle(lambda: (self.refresh_dirty_state(), self.notify_change()))
+        return "break"
         
 
     def handle_timer(self):
