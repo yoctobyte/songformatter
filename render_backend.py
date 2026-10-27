@@ -182,6 +182,37 @@ def _map_font(name, size_pt, geo):
     return (family, -px, *styles)
 
 
+_FONT_PX_FACTOR = None  # cached result of _font_px_factor (one display per app)
+
+
+def _font_px_factor(tk_widget):
+    """How much smaller to request a Tk font so it draws at the size asked for.
+
+    A pixel-sized Tk font is not always drawn at that many pixels: Tk converts
+    it to points using its own DPI (`tk scaling`), and Xft renders the points at
+    Xft.dpi. On a HiDPI desktop (Xft.dpi 192, Tk at 96) every glyph comes out
+    twice too big while the word positions are right, so words overlap.
+    Measured, not derived from settings: a sample string in a 100px font is
+    compared with its PDF width at 100pt. About 1.0 on a consistent display.
+    """
+    global _FONT_PX_FACTOR
+    if _FONT_PX_FACTOR is not None:
+        return _FONT_PX_FACTOR
+    factor = 1.0
+    sample = "Hamburgefonstiv 0123456789"
+    expected = pdf_string_width(sample, "Helvetica", 100)
+    if expected:
+        try:
+            import tkinter.font as tkfont
+            measured = tkfont.Font(root=tk_widget, font=("Helvetica", -100)).measure(sample)
+            if measured > 0:
+                factor = expected / measured
+        except Exception:
+            pass
+    _FONT_PX_FACTOR = factor
+    return factor
+
+
 class TkCanvasBackend:
     """Draws the song via the reportlab-canvas subset onto a Tk Canvas.
 
@@ -207,6 +238,9 @@ class TkCanvasBackend:
             zoom = min(max_zoom, float(fit_width_px) / (page_w * self.ppp))
         self.zoom = max(0.05, zoom)
         self.geo = self.ppp * self.zoom  # canvas pixels per PDF point (GEOMETRY)
+        # pixels to REQUEST per PDF point for fonts: geo, corrected for a display
+        # that draws Tk fonts larger than requested (see _font_px_factor)
+        self.font_geo = self.geo * _font_px_factor(tk_canvas)
         self.page_gap = page_gap
         self.page_index = 0
         self._descents = {}  # font tuple -> descent in canvas pixels
@@ -216,7 +250,7 @@ class TkCanvasBackend:
         self._stroke = "#000000"
         self._linewidth = 1.0
         self._pdf_font = ("Helvetica", 13.0)
-        self._font = _map_font("Helvetica", 13, self.geo)
+        self._font = _map_font("Helvetica", 13, self.font_geo)
 
     # --- coordinate transform (PDF pt, y-up bottom-left -> Tk px, y-down) ---
     def _x(self, x):
@@ -267,7 +301,7 @@ class TkCanvasBackend:
     # --- state ---
     def setFont(self, name, size):
         self._pdf_font = (name, size)
-        self._font = _map_font(name, size, self.geo)
+        self._font = _map_font(name, size, self.font_geo)
 
     def setFillColorRGB(self, r, g, b):
         self._fill = _rgb_to_hex(r, g, b)
@@ -390,7 +424,7 @@ class _TkTextObject:
 
     def setFont(self, name, size, leading=None):
         self.pdf_font = (name, size)
-        self.font = _map_font(name, size, self.b.geo)
+        self.font = _map_font(name, size, self.b.font_geo)
         self.leading = (leading if leading is not None else size)
 
     def setTextOrigin(self, x, y):
