@@ -1360,13 +1360,13 @@ def format_song_text_as_pdf(song_text, pdffilename="sfpdfoutput.pdf", preview=Tr
     # extract headers
     headers=[]
     #iterate over header lines
-    line=lines.pop(0)
+    line=lines.pop(0) if lines else ''
     while line!='':
         if '=' in line: #parse parameters
             parseParams(line)
         else:
             headers.append(line)
-        line=lines.pop(0)
+        line=lines.pop(0) if lines else '' #a song may be nothing but header lines
 
 
 
