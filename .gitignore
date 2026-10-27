@@ -9,3 +9,19 @@ __pycache__/
 songformatter_settings.ini
 lastopened.txt
 tmppdf.pdf
+
+# pxx build outputs: the compiled app and the per-module binaries built while
+# testing (a .map accompanies each). Sources here are .py; nothing else in this
+# directory is extensionless, so these names are the binaries.
+songformatter-pxx
+songformatter-pxx.map
+kadrv
+kadrv.map
+key_analysis
+key_analysis.map
+render_backend
+render_backend.map
+settings
+settings.map
+convertrawtext
+convertrawtext.map
