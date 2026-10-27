@@ -1465,7 +1465,7 @@ def format_song_text_as_pdf(song_text, pdffilename="sfpdfoutput.pdf", preview=Tr
 
         if is_chord_line(line):
             if (haschord or haslyric): #next line
-                y-=fontsize+spacing
+                y-=max(fontsize, chordfontsize)+spacing #chords and lyrics share a row: advance by the taller
                 haslyric=False
             haschord=True
             #transpose the line
@@ -1482,7 +1482,7 @@ def format_song_text_as_pdf(song_text, pdffilename="sfpdfoutput.pdf", preview=Tr
         else:
 
             if (line=='' or line=='/P' or line=="/B"): 
-                y-=fontsize*1.70
+                y-=max(fontsize, chordfontsize)*1.70
                 haslyric,haschord=False,False
             elif line=="/FL":
                 #plot a horizonal line
@@ -1503,7 +1503,7 @@ def format_song_text_as_pdf(song_text, pdffilename="sfpdfoutput.pdf", preview=Tr
     
             else:
                 if (haslyric): #new line
-                    y-=fontsize+spacing
+                    y-=max(fontsize, chordfontsize)+spacing
                 c.setFont(font, fontsize)
                 c.drawString(marginleft+chordwidth, y, line)
                 haslyric=True
